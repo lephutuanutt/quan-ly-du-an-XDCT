@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<!--
+  MÔ PHỎNG QUẢN LÝ DỰ ÁN XÂY DỰNG
+  Tác giả: TS. Lê Phú Tuấn
+  Bộ môn Hóa học - Môi trường, Khoa Khoa học Ứng dụng
+  Trường Đại học Công nghệ Giao thông vận tải
+  Mục đích: Sử dụng trong giảng dạy sinh viên chuyên ngành Công nghệ và Quản lý môi trường
+-->
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Construction Project Management Simulator</title>
+<style>
+:root{
+  --bg:#f4f7fb; --card:#fff; --primary:#0d47a1; --primary2:#1976d2; --text:#24313d;
+  --good:#2e7d32; --warn:#ef6c00; --bad:#c62828; --line:#dde3ea; --muted:#607d8b;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
+header{background:linear-gradient(135deg,#0b3d91,#1976d2);color:#fff;padding:22px 18px;box-shadow:0 2px 8px #0002}
+header h1{margin:0 0 6px;font-size:27px} header p{margin:0;opacity:.95}
+.container{width:96%;max-width:1450px;margin:18px auto}
+.grid{display:grid;grid-template-columns:1.1fr .9fr;gap:16px}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.card{background:#fff;border-radius:12px;padding:17px;box-shadow:0 2px 10px #00000012;margin-bottom:16px}
+h2{margin:0 0 12px;color:var(--primary);font-size:20px}
+h3{color:#1565c0;margin:14px 0 8px}
+label{display:block;font-weight:700;margin-top:11px}
+select,input[type=text],input[type=range]{width:100%;margin-top:6px}
+select,input[type=text]{padding:10px;border:1px solid #c8d1dc;border-radius:7px;background:#fff}
+.rangeLine{display:flex;justify-content:space-between;gap:12px}.rangeValue{color:#1565c0;font-weight:700}
+button{border:0;border-radius:8px;padding:11px 15px;font-weight:700;cursor:pointer;margin:5px 4px 5px 0}
+.primary{background:#1565c0;color:#fff}.secondary{background:#edf2f7;color:#263238}.danger{background:#c62828;color:#fff}
+.scenario{background:#eaf4ff;border-left:5px solid #1976d2;padding:14px;line-height:1.55;border-radius:6px}
+.risk{background:#fff3e0;border-left:5px solid #ef6c00;padding:11px;margin-top:10px;border-radius:6px}
+.metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}
+.metric{background:#f6f8fa;border:1px solid #e4e9ef;padding:11px 6px;border-radius:9px;text-align:center}
+.metric .n{font-size:21px;font-weight:800;color:#0d47a1}.metric .t{font-size:12px;margin-top:4px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:10px}
+.kpi{background:#f6f8fa;border-radius:8px;padding:10px;text-align:center;border:1px solid #e4e9ef}
+.kpi strong{display:block;font-size:19px;color:#37474f}.kpi small{color:#607d8b}
+.progress{height:18px;background:#dfe4ea;border-radius:9px;overflow:hidden;margin:7px 0}.bar{height:100%;background:#1976d2;width:0;transition:.35s}
+.choice{display:block;width:100%;text-align:left;border:2px solid #e3e7eb;background:#fff;color:#263238;padding:12px;margin:8px 0;border-radius:9px}
+.choice:hover{border-color:#64b5f6;background:#f6fbff}.choice.selected{border-color:#1565c0;background:#e3f2fd}
+.good{color:var(--good);font-weight:700}.warn{color:var(--warn);font-weight:700}.bad{color:var(--bad);font-weight:700}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{border:1px solid #dfe4ea;padding:7px;text-align:center}th{background:#1565c0;color:#fff}
+.task-critical{background:#ffebee}.task-normal{background:#fff}
+.gantt{position:relative;min-width:720px}.ganttRow{display:grid;grid-template-columns:210px 1fr;align-items:center;border-bottom:1px solid #edf0f3;min-height:30px}
+.ganttName{padding:6px;font-size:12px}.ganttTrack{position:relative;height:24px;background:repeating-linear-gradient(to right,#fafafa 0,#fafafa 9.8%,#edf1f4 10%)}
+.ganttBar{position:absolute;top:5px;height:14px;background:#1976d2;border-radius:4px}.ganttBar.critical{background:#d32f2f}
+.scroll{overflow-x:auto}
+.scoreBox{text-align:center;background:#e8f5e9;padding:14px;border-radius:9px}.scoreBox .score{font-size:42px;font-weight:800;color:#2e7d32}
+.small{font-size:12px;color:#607d8b}.pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#e3f2fd;color:#0d47a1;font-size:12px;font-weight:700}
+footer{text-align:center;background:#263238;color:#fff;padding:14px;margin-top:24px;font-size:12px}
+
+.author-box{
+  margin-top:12px;
+  background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.28);
+  border-radius:10px;
+  padding:12px 14px;
+  line-height:1.55;
+}
+.author-box strong{color:#fff}
+.author-box .course-use{
+  margin-top:5px;
+  font-size:14px;
+  opacity:.96;
+}
+.academic-note{
+  background:#eef7ff;
+  border-left:5px solid #0d47a1;
+  padding:14px 16px;
+  border-radius:8px;
+  margin-bottom:16px;
+  line-height:1.55;
+}
+.academic-note b{color:#0d47a1}
+.footer-main{font-weight:700;margin-bottom:5px}
+.footer-sub{opacity:.88;line-height:1.5}
+
+@media(max-width:980px){.grid,.grid2{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,1fr)}.kpis{grid-template-columns:repeat(2,1fr)}}
+
+.help-toolbar{
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+  margin:0 0 16px;
+  flex-wrap:wrap;
+}
+.help-button{
+  background:#ffb300;
+  color:#263238;
+  box-shadow:0 2px 6px #0002;
+}
+.help-button:hover{background:#ffa000}
+.modal{
+  display:none;
+  position:fixed;
+  z-index:9999;
+  left:0; top:0;
+  width:100%; height:100%;
+  overflow:auto;
+  background:rgba(0,0,0,.55);
+  padding:24px 12px;
+}
+.modal-content{
+  background:#fff;
+  margin:0 auto;
+  width:min(920px,96%);
+  border-radius:14px;
+  box-shadow:0 8px 30px #0005;
+  overflow:hidden;
+  animation:modalIn .18s ease-out;
+}
+@keyframes modalIn{
+  from{transform:translateY(-12px);opacity:0}
+  to{transform:translateY(0);opacity:1}
+}
+.modal-header{
+  background:linear-gradient(135deg,#0d47a1,#1976d2);
+  color:#fff;
+  padding:18px 20px;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:16px;
+}
+.modal-header h2{color:#fff;margin:0;font-size:22px}
+.modal-close{
+  border:0;
+  background:rgba(255,255,255,.16);
+  color:#fff;
+  font-size:24px;
+  line-height:1;
+  padding:5px 10px;
+  margin:0;
+}
+.modal-body{
+  padding:20px;
+  line-height:1.62;
+}
+.guide-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:14px;
+}
+.guide-card{
+  border:1px solid #dfe6ee;
+  border-radius:10px;
+  padding:14px;
+  background:#f9fbfd;
+}
+.guide-card h3{
+  margin:0 0 8px;
+  color:#0d47a1;
+  font-size:17px;
+}
+.guide-step{
+  display:flex;
+  gap:10px;
+  margin:10px 0;
+  align-items:flex-start;
+}
+.guide-step .num{
+  min-width:28px;
+  height:28px;
+  border-radius:50%;
+  background:#1976d2;
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+}
+.guide-note{
+  background:#fff8e1;
+  border-left:5px solid #ffb300;
+  padding:12px;
+  border-radius:7px;
+  margin-top:14px;
+}
+.guide-kpi{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:8px;
+}
+.guide-kpi th,.guide-kpi td{
+  border:1px solid #dfe4ea;
+  padding:8px;
+  text-align:left;
+}
+.guide-kpi th{background:#e3f2fd;color:#0d47a1}
+@media(max-width:760px){
+  .guide-grid{grid-template-columns:1fr}
+}
+
+</style>
+</head>
+<body>
+<header>
+  <h1>🏗️ Mô phỏng Quản lý Dự án Xây dựng – 10 dự án</h1>
+  <p>CPM • Đường găng • Earned Value Management • Rủi ro • Nguồn lực • Tiến độ • Chi phí • Chất lượng • An toàn • Môi trường</p>
+
+  <div class="author-box">
+    <div><strong>Tác giả: TS. Lê Phú Tuấn</strong></div>
+    <div>Bộ môn Hóa học - Môi trường, Khoa Khoa học Ứng dụng</div>
+    <div>Trường Đại học Công nghệ Giao thông vận tải</div>
+    <div class="course-use">
+      <strong>Mục đích sử dụng:</strong> Mô phỏng phục vụ giảng dạy sinh viên chuyên ngành
+      <strong>Công nghệ và Quản lý môi trường</strong>.
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+<div class="help-toolbar">
+  <button class="help-button" onclick="openGuide()">📘 Hướng dẫn sử dụng cho sinh viên</button>
+</div>
+
+
+<div class="academic-note">
+  <b>Thông tin học liệu:</b> Công cụ mô phỏng này được xây dựng phục vụ hoạt động giảng dạy,
+  thảo luận nhóm và thực hành ra quyết định trong học phần liên quan đến quản lý dự án xây dựng
+  cho sinh viên chuyên ngành <b>Công nghệ và Quản lý môi trường</b>. Sinh viên đóng vai Ban quản lý dự án,
+  phân tích tình huống, lựa chọn phương án xử lý, điều chỉnh nguồn lực và theo dõi tác động đến
+  tiến độ, chi phí, chất lượng, an toàn và môi trường.
+</div>
+
+
+<div class="card">
+  <div class="grid2">
+    <div>
+      <label>Tên sinh viên / nhóm</label>
+      <input id="studentName" type="text" placeholder="Ví dụ: Nhóm 3">
+    </div>
+    <div>
+      <label>Chọn dự án</label>
+      <select id="projectType" onchange="startProject()"></select>
+    </div>
+  </div>
+  <div id="projectInfo" class="scenario" style="margin-top:12px"></div>
+</div>
+
+<div class="grid">
+  <div>
+    <div class="card">
+      <h2>1. Bảng điều khiển dự án</h2>
+      <div class="metrics">
+        <div class="metric"><div class="n" id="progressMetric">0%</div><div class="t">Tiến độ thực tế</div></div>
+        <div class="metric"><div class="n" id="costMetric">0</div><div class="t">Chi phí đã dùng (tỷ)</div></div>
+        <div class="metric"><div class="n" id="qualityMetric">85</div><div class="t">Chất lượng</div></div>
+        <div class="metric"><div class="n" id="safetyMetric">90</div><div class="t">An toàn</div></div>
+        <div class="metric"><div class="n" id="envMetric">85</div><div class="t">Môi trường</div></div>
+      </div>
+      <p><b>Tiến độ tổng thể</b> <span class="pill">Vòng <span id="round">1</span>/10</span></p>
+      <div class="progress"><div class="bar" id="progressBar"></div></div>
+      <div class="kpis">
+        <div class="kpi"><strong id="spi">1.00</strong><small>SPI = EV/PV</small></div>
+        <div class="kpi"><strong id="cpi">1.00</strong><small>CPI = EV/AC</small></div>
+        <div class="kpi"><strong id="sv">0</strong><small>SV (tỷ)</small></div>
+        <div class="kpi"><strong id="cv">0</strong><small>CV (tỷ)</small></div>
+      </div>
+      <p class="small">SPI &lt; 1: chậm tiến độ; CPI &lt; 1: hiệu quả chi phí kém. EV, PV và AC được tính theo mô hình EVM đơn giản hóa cho mục đích giảng dạy.</p>
+    </div>
+
+    <div class="card">
+      <h2>2. Tình huống vòng hiện tại</h2>
+      <div id="scenarioBox" class="scenario"></div>
+      <div id="riskBox"></div>
+      <h3>Chọn quyết định</h3>
+      <div id="choices"></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="card">
+      <h2>3. Điều chỉnh nguồn lực và chiến lược</h2>
+
+      <div class="rangeLine"><label>Nhân lực bổ sung</label><span class="rangeValue" id="laborV">10%</span></div>
+      <input id="labor" type="range" min="0" max="50" value="10" oninput="updateLabels()">
+
+      <div class="rangeLine"><label>Tăng ca</label><span class="rangeValue" id="overtimeV">10%</span></div>
+      <input id="overtime" type="range" min="0" max="50" value="10" oninput="updateLabels()">
+
+      <div class="rangeLine"><label>Ngân sách dự phòng sử dụng trong vòng</label><span class="rangeValue" id="reserveV">5%</span></div>
+      <input id="reserve" type="range" min="0" max="25" value="5" oninput="updateLabels()">
+
+      <div class="rangeLine"><label>Mức QA/QC</label><span class="rangeValue" id="qaV">70%</span></div>
+      <input id="qa" type="range" min="40" max="100" value="70" oninput="updateLabels()">
+
+      <div class="rangeLine"><label>Mức tham vấn / điều phối bên liên quan</label><span class="rangeValue" id="stakeV">60%</span></div>
+      <input id="stake" type="range" min="20" max="100" value="60" oninput="updateLabels()">
+
+      <label>Ưu tiên quản lý</label>
+      <select id="strategy">
+        <option value="balanced">Cân bằng</option>
+        <option value="schedule">Ưu tiên tiến độ</option>
+        <option value="cost">Ưu tiên chi phí</option>
+        <option value="quality">Ưu tiên chất lượng</option>
+        <option value="safety">Ưu tiên an toàn</option>
+        <option value="environment">Ưu tiên môi trường</option>
+      </select>
+
+      <button class="primary" onclick="submitDecision()">✓ Xác nhận quyết định</button>
+      <button class="secondary" onclick="startProject()">↻ Bắt đầu lại</button>
+    </div>
+
+    <div class="card">
+      <h2>4. Nhận xét & điểm</h2>
+      <div id="feedback">Chọn phương án và điều chỉnh các thông số trước khi xác nhận.</div>
+      <div class="scoreBox" style="margin-top:12px">
+        <div class="score" id="score">0</div>
+        <div>/100 điểm</div>
+        <p id="scoreComment"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>5. CPM và đường găng</h2>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>Công việc</th><th>Thời lượng</th><th>Phụ thuộc</th><th>ES</th><th>EF</th><th>LS</th><th>LF</th><th>Slack</th><th>Trạng thái</th></tr></thead>
+      <tbody id="cpmBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <h2>6. Gantt chart đơn giản</h2>
+  <div class="scroll"><div id="gantt" class="gantt"></div></div>
+</div>
+
+<div class="card">
+  <h2>7. Nhật ký quyết định</h2>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Vòng</th><th>Tình huống</th><th>Quyết định</th><th>Rủi ro</th><th>SPI</th><th>CPI</th><th>Điểm vòng</th></tr></thead>
+    <tbody id="historyBody"></tbody>
+  </table>
+  </div>
+  <button class="secondary" onclick="exportCSV()">⬇ Xuất kết quả CSV</button>
+  <button class="secondary" onclick="showLeaderboard()">🏆 Bảng xếp hạng</button>
+</div>
+
+<div class="card" id="leaderboardCard" style="display:none">
+  <h2>8. Bảng xếp hạng cục bộ</h2>
+  <div id="leaderboard"></div>
+</div>
+
+</div>
+
+
+<div id="guideModal" class="modal" aria-hidden="true">
+  <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="guideTitle">
+    <div class="modal-header">
+      <div>
+        <h2 id="guideTitle">📘 Hướng dẫn sử dụng mô phỏng</h2>
+        <div style="margin-top:5px;opacity:.92">
+          Dành cho sinh viên chuyên ngành Công nghệ và Quản lý môi trường
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeGuide()" aria-label="Đóng hướng dẫn">×</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="guide-card">
+        <h3>1. Mục tiêu của bài mô phỏng</h3>
+        <p>
+          Bạn đóng vai <b>Ban quản lý dự án</b>. Nhiệm vụ là đưa ra quyết định để dự án
+          hoàn thành đúng tiến độ nhưng vẫn kiểm soát được <b>chi phí, chất lượng, an toàn
+          và môi trường</b>. Mô phỏng gồm <b>10 vòng ra quyết định</b>.
+        </p>
+      </div>
+
+      <div class="guide-grid" style="margin-top:14px">
+        <div class="guide-card">
+          <h3>2. Các bước thực hiện</h3>
+
+          <div class="guide-step">
+            <div class="num">1</div>
+            <div>Nhập <b>tên sinh viên hoặc tên nhóm</b>.</div>
+          </div>
+
+          <div class="guide-step">
+            <div class="num">2</div>
+            <div>Chọn <b>1 trong 10 loại dự án</b> để bắt đầu mô phỏng.</div>
+          </div>
+
+          <div class="guide-step">
+            <div class="num">3</div>
+            <div>Đọc kỹ <b>tình huống phát sinh</b> và rủi ro ngẫu nhiên của vòng hiện tại.</div>
+          </div>
+
+          <div class="guide-step">
+            <div class="num">4</div>
+            <div>Chọn một phương án xử lý A, B hoặc C.</div>
+          </div>
+
+          <div class="guide-step">
+            <div class="num">5</div>
+            <div>Điều chỉnh nguồn lực: nhân lực, tăng ca, dự phòng, QA/QC và mức tham vấn.</div>
+          </div>
+
+          <div class="guide-step">
+            <div class="num">6</div>
+            <div>Chọn chiến lược ưu tiên rồi bấm <b>“Xác nhận quyết định”</b>.</div>
+          </div>
+
+          <div class="guide-step">
+            <div class="num">7</div>
+            <div>Đọc nhận xét, theo dõi các chỉ số và tiếp tục đến vòng 10.</div>
+          </div>
+        </div>
+
+        <div class="guide-card">
+          <h3>3. Cách điều chỉnh nguồn lực</h3>
+          <p><b>Nhân lực bổ sung:</b> có thể tăng tiến độ nhưng làm tăng chi phí; quá nhiều người có thể gây giảm hiệu quả.</p>
+          <p><b>Tăng ca:</b> giúp rút ngắn thời gian nhưng nếu quá cao sẽ làm giảm chất lượng và an toàn.</p>
+          <p><b>Dự phòng:</b> giúp dự án hấp thụ tốt hơn các rủi ro bất ngờ nhưng làm tăng chi phí sử dụng.</p>
+          <p><b>QA/QC:</b> mức kiểm soát cao giúp tăng chất lượng nhưng có thể cần thêm thời gian và chi phí.</p>
+          <p><b>Tham vấn bên liên quan:</b> đặc biệt quan trọng với các vấn đề cộng đồng và môi trường.</p>
+        </div>
+      </div>
+
+      <div class="guide-card" style="margin-top:14px">
+        <h3>4. Đọc các chỉ số quản lý dự án</h3>
+        <table class="guide-kpi">
+          <tr><th>Chỉ số</th><th>Ý nghĩa</th><th>Cách đọc nhanh</th></tr>
+          <tr><td><b>SPI</b></td><td>Schedule Performance Index = EV/PV</td><td>SPI &gt; 1: nhanh hơn kế hoạch; SPI = 1: đúng kế hoạch; SPI &lt; 1: chậm.</td></tr>
+          <tr><td><b>CPI</b></td><td>Cost Performance Index = EV/AC</td><td>CPI &gt; 1: hiệu quả chi phí tốt; CPI = 1: đúng kế hoạch; CPI &lt; 1: hiệu quả chi phí kém.</td></tr>
+          <tr><td><b>SV</b></td><td>Schedule Variance = EV − PV</td><td>SV dương tốt hơn kế hoạch; SV âm thể hiện chậm.</td></tr>
+          <tr><td><b>CV</b></td><td>Cost Variance = EV − AC</td><td>CV dương tốt hơn ngân sách; CV âm thể hiện vượt chi phí.</td></tr>
+        </table>
+      </div>
+
+      <div class="guide-grid" style="margin-top:14px">
+        <div class="guide-card">
+          <h3>5. CPM và đường găng</h3>
+          <p>
+            Bảng CPM cho biết ES, EF, LS, LF và Slack của từng công việc.
+            Các công việc màu đỏ có <b>Slack = 0</b> và thuộc <b>đường găng</b>.
+          </p>
+          <p>
+            Khi dự án bị chậm, nên ưu tiên xem xét các hoạt động đường găng thay vì
+            tăng nguồn lực cho toàn bộ công trường.
+          </p>
+        </div>
+
+        <div class="guide-card">
+          <h3>6. Cách chấm điểm</h3>
+          <p>
+            Mỗi vòng được chấm dựa trên chất lượng quyết định và cách sử dụng nguồn lực.
+            Điểm cuối cùng còn phản ánh tình trạng tiến độ, chi phí, chất lượng, an toàn
+            và môi trường của dự án.
+          </p>
+          <p>
+            Mục tiêu không phải chỉ là làm dự án <b>nhanh nhất</b>, mà là đạt sự cân bằng
+            quản lý hợp lý.
+          </p>
+        </div>
+      </div>
+
+      <div class="guide-card" style="margin-top:14px">
+        <h3>7. Kết thúc bài mô phỏng</h3>
+        <p>
+          Sau vòng 10, hãy xem điểm tổng, SPI, CPI, chất lượng, an toàn, môi trường và
+          nhật ký quyết định. Bấm <b>“Xuất kết quả CSV”</b> để lưu kết quả và nộp cho giảng viên
+          khi được yêu cầu.
+        </p>
+      </div>
+
+      <div class="guide-note">
+        <b>Gợi ý khi làm việc nhóm:</b> Trước mỗi quyết định, nhóm nên thảo luận ít nhất ba câu hỏi:
+        (1) phương án nào tác động trực tiếp đến đường găng; (2) phương án đó làm thay đổi chi phí,
+        chất lượng, an toàn và môi trường như thế nào; và (3) rủi ro mới nào có thể phát sinh sau quyết định.
+      </div>
+
+      <div style="text-align:right;margin-top:16px">
+        <button class="primary" onclick="closeGuide()">Đã hiểu – Bắt đầu mô phỏng</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-main">MÔ PHỎNG QUẢN LÝ DỰ ÁN XÂY DỰNG</div>
+  <div class="footer-sub">
+    Tác giả: TS. Lê Phú Tuấn<br>
+    Bộ môn Hóa học - Môi trường, Khoa Khoa học Ứng dụng, Trường Đại học Công nghệ Giao thông vận tải<br>
+    Sử dụng trong giảng dạy sinh viên chuyên ngành Công nghệ và Quản lý môi trường<br>
+    Chạy độc lập trên trình duyệt, không cần máy chủ.
+  </div>
+</footer>
+
+<script>
+const commonRisks = [
+  {name:"Mưa lớn bất thường",p:.22,progress:-3,cost:1.5,quality:0,safety:-1,env:0},
+  {name:"Chậm phê duyệt hồ sơ",p:.18,progress:-2.5,cost:.8,quality:0,safety:0,env:0},
+  {name:"Biến động giá vật liệu",p:.18,progress:-1,cost:2.2,quality:0,safety:0,env:0},
+  {name:"Thiếu lao động tay nghề cao",p:.16,progress:-2,cost:1,quality:-1,safety:-1,env:0},
+  {name:"Sự cố thiết bị thi công",p:.14,progress:-2,cost:1.2,quality:0,safety:-1,env:0},
+  {name:"Không phát sinh rủi ro lớn",p:.12,progress:0,cost:0,quality:0,safety:0,env:0}
+];
+
+function sc(title,text,a,b,c){
+  return {title,text,choices:[
+    {text:a[0],score:a[1],p:a[2],c:a[3],q:a[4],s:a[5],e:a[6],fb:a[7]},
+    {text:b[0],score:b[1],p:b[2],c:b[3],q:b[4],s:b[5],e:b[6],fb:b[7]},
+    {text:c[0],score:c[1],p:c[2],c:c[3],q:c[4],s:c[5],e:c[6],fb:c[7]}
+  ]};
+}
+const A=(t,score,p,c,q,s,e,fb)=>[t,score,p,c,q,s,e,fb];
+
+function standardScenarios(project, special){
+  const generic = [
+    sc("Nhà thầu phụ chậm tiến độ",
+      `Một nhà thầu phụ quan trọng của ${project} chậm khoảng 3 tuần và đang ảnh hưởng đến đường găng.`,
+      A("Tăng ca toàn bộ công trường",8,5,3,-2,-3,0,"Có cải thiện tiến độ nhưng thiếu tập trung và làm tăng rủi ro."),
+      A("Phân tích CPM, bổ sung nguồn lực đúng công việc găng",20,7,2,1,0,0,"Tập trung vào công việc găng là phương án hợp lý."),
+      A("Chờ nhà thầu tự khắc phục",4,-4,0,0,0,0,"Thiếu hành động phục hồi tiến độ.")),
+    sc("Yêu cầu thay đổi từ chủ đầu tư",
+      `Chủ đầu tư đề nghị bổ sung một thay đổi phạm vi cho ${project} khi thi công đã triển khai.`,
+      A("Thực hiện ngay để tiết kiệm thời gian",6,-1,4,-1,0,0,"Thiếu quy trình kiểm soát thay đổi."),
+      A("Đánh giá tác động phạm vi–chi phí–tiến độ rồi mới phê duyệt",20,1,1.5,2,1,0,"Đúng nguyên tắc integrated change control."),
+      A("Từ chối mọi thay đổi",8,1,0,0,0,0,"Ổn định phạm vi nhưng thiếu linh hoạt.")),
+    sc("Nguy cơ vượt ngân sách",
+      `EAC sơ bộ cho thấy ${project} có thể vượt ngân sách khoảng 7–9%.`,
+      A("Cắt các hạng mục kiểm tra chất lượng",0,2,-3,-12,-5,-2,"Không nên tiết kiệm bằng cách giảm QA/QC."),
+      A("Value engineering và rà soát mua sắm/hợp đồng",20,2,-2.5,1,0,0,"Giải pháp kiểm soát chi phí phù hợp."),
+      A("Dừng mua sắm để chờ giá giảm",5,-5,-1,0,0,0,"Có nguy cơ tạo chậm tiến độ mới.")),
+    sc("Near-miss an toàn",
+      `Một sự cố suýt gây tai nạn xảy ra tại công trường ${project}.`,
+      A("Không báo cáo vì chưa có thiệt hại",0,1,0,0,-15,0,"Near-miss phải được ghi nhận và điều tra."),
+      A("Dừng khu vực, điều tra nguyên nhân gốc và triển khai biện pháp",20,-1,1,1,12,0,"Phản ứng phù hợp với quản lý HSE."),
+      A("Nhắc nhở công nhân và tiếp tục",7,1,0,0,-4,0,"Chưa đủ để ngăn tái diễn.")),
+    sc("Áp lực rút ngắn thời hạn",
+      `Mốc bàn giao của ${project} được yêu cầu sớm hơn 20 ngày.`,
+      A("Bỏ bớt bước nghiệm thu",0,7,-1,-15,-8,0,"Không được đánh đổi chất lượng và an toàn."),
+      A("Lập recovery schedule, fast-tracking có kiểm soát",20,7,2,0,-1,0,"Có cơ sở quản lý tiến độ."),
+      A("Tăng ca 24/24 toàn công trường",8,6,4,-3,-5,-1,"Chi phí và rủi ro cao.")),
+  ];
+  return special.concat(generic).slice(0,10);
+}
+
+const projectData = {
+waste:{
+ name:"Nhà máy xử lý rác", duration:30, budget:1600,
+ desc:"Nhà máy xử lý chất thải rắn đô thị tích hợp phân loại, đốt thu hồi năng lượng và xử lý nước rỉ rác.",
+ tasks:[
+  ["A","Khảo sát & thiết kế",2,[]],["B","Giải phóng mặt bằng",4,[]],["C","Nền móng",5,["A","B"]],
+  ["D","Nhà xưởng chính",7,["C"]],["E","Lò đốt & thiết bị",8,["D"]],["F","Xử lý khí thải",5,["D"]],
+  ["G","Xử lý nước rỉ rác",5,["C"]],["H","Điện & điều khiển",4,["E","F","G"]],["I","Chạy thử",3,["H"]],["J","Nghiệm thu",1,["I"]]
+ ],
+ scenarios:standardScenarios("nhà máy xử lý rác",[
+  sc("Thành phần rác khác thiết kế","Tỷ lệ hữu cơ và độ ẩm của rác đầu vào cao hơn giả định thiết kế.",
+   A("Giữ nguyên thông số vận hành",4,0,0,-8,0,-6,"Có nguy cơ giảm hiệu suất."),
+   A("Lấy mẫu lại, hiệu chỉnh cân bằng nhiệt và chế độ vận hành",20,1,1,7,1,6,"Xử lý dựa trên dữ liệu đầu vào thực tế."),
+   A("Tăng nhiên liệu hỗ trợ lâu dài",8,2,4,0,0,-2,"Có thể hỗ trợ ngắn hạn nhưng tăng chi phí.")),
+  sc("Khí thải chạy thử chưa đạt","Một chỉ tiêu khí thải vượt giới hạn trong giai đoạn commissioning.",
+   A("Vẫn nghiệm thu để giữ tiến độ",0,4,0,-10,0,-18,"Không phù hợp với yêu cầu môi trường."),
+   A("Root-cause, hiệu chỉnh hệ xử lý khí thải và thử lại",20,-1,2,8,1,15,"Phù hợp về kỹ thuật và tuân thủ."),
+   A("Tăng hóa chất hấp phụ mà không chẩn đoán",7,1,3,-2,0,-4,"Giải pháp tạm thời.")),
+  sc("Phản đối của cộng đồng","Cộng đồng xung quanh lo ngại mùi và khí thải.",
+   A("Không đối thoại để tránh chậm dự án",3,1,0,0,0,-8,"Tăng rủi ro xã hội."),
+   A("Tổ chức tham vấn, công khai quan trắc và cơ chế phản hồi",20,0,1,1,1,8,"Tăng chấp nhận xã hội."),
+   A("Chỉ tăng tường bao",8,0,2,0,0,2,"Không giải quyết đầy đủ mối quan tâm.")),
+  sc("Nước rỉ rác tăng đột biến","Mưa lớn làm lưu lượng nước rỉ rác vượt công suất tạm thời.",
+   A("Xả tạm để tránh tràn bể",0,2,-1,-5,0,-20,"Rủi ro môi trường nghiêm trọng."),
+   A("Dùng bể điều hòa/dự phòng và điều chỉnh vận hành",20,-1,2,3,2,12,"Quản lý tải đột biến hợp lý."),
+   A("Dừng tiếp nhận rác hoàn toàn",7,-5,1,1,1,5,"An toàn môi trường nhưng ảnh hưởng dịch vụ.")),
+  sc("Chậm giao thiết bị lò đốt","Thiết bị chính nhập khẩu chậm 6 tuần.",
+   A("Chờ thiết bị",4,-5,0,0,0,0,"Thụ động."),
+   A("Hoàn thiện hạ tầng, điện, khí thải và FAT song song",20,5,1,3,1,0,"Tối ưu sequencing."),
+   A("Đổi sang thiết bị sẵn có chưa thẩm định",3,5,3,-10,-5,-4,"Rủi ro tích hợp và hiệu suất."))
+ ])
+},
+water:{
+ name:"Nhà máy xử lý nước", duration:24, budget:1100,
+ desc:"Nhà máy xử lý nước cấp gồm công trình thu, keo tụ–lắng, lọc, khử trùng, bể chứa và mạng kỹ thuật.",
+ tasks:[
+  ["A","Khảo sát nguồn nước",2,[]],["B","Thiết kế",3,["A"]],["C","Móng & bể",5,["B"]],["D","Nhà trạm",4,["C"]],
+  ["E","Thiết bị công nghệ",6,["D"]],["F","Tuyến ống chính",6,["B"]],["G","Điện–SCADA",4,["E"]],
+  ["H","Đấu nối",2,["F","G"]],["I","Chạy thử",2,["H"]],["J","Nghiệm thu",1,["I"]]
+ ],
+ scenarios:standardScenarios("nhà máy xử lý nước",[
+  sc("Độ đục nguồn nước tăng mạnh","Mùa mưa làm độ đục nguồn nước cao hơn nhiều so với thiết kế.",
+   A("Giữ nguyên liều hóa chất",5,0,0,-6,0,-4,"Khó đảm bảo chất lượng đầu ra."),
+   A("Jar-test và tối ưu keo tụ–lắng",20,1,1,8,1,4,"Điều chỉnh vận hành dựa trên thử nghiệm."),
+   A("Tăng liều hóa chất tối đa",7,1,3,-2,-1,-2,"Có thể gây lãng phí và chất lượng không ổn định.")),
+  sc("Chất lượng nước sau lọc không đạt","Chỉ tiêu độ đục sau lọc vượt mục tiêu.",
+   A("Tiếp tục cấp nước",0,3,0,-15,-8,-5,"Không phù hợp."),
+   A("Kiểm tra vật liệu lọc, backwash và điều chỉnh tải lọc",20,-1,2,12,2,3,"Đúng quy trình QA/QC."),
+   A("Tăng clo để bù",4,1,1,-5,0,-2,"Không xử lý nguyên nhân chính.")),
+  sc("Chậm tuyến ống truyền tải","Một đoạn ống chính chưa bàn giao mặt bằng.",
+   A("Dừng toàn bộ nhà máy",4,-5,0,0,0,0,"Không cần thiết."),
+   A("Phân đoạn thi công và hoàn thiện nhà máy song song",20,4,1,1,0,0,"Giảm ảnh hưởng đường găng."),
+   A("Thi công khi chưa có mặt bằng hợp lệ",2,4,2,-2,-2,-2,"Rủi ro pháp lý.")),
+  sc("Mất điện khi chạy thử","Nguồn điện không ổn định làm gián đoạn commissioning.",
+   A("Bỏ qua kiểm tra liên tục",3,2,0,-5,-2,0,"Không đủ dữ liệu."),
+   A("Bổ sung nguồn dự phòng và chạy thử lại",20,-1,2,8,4,0,"Đảm bảo reliability."),
+   A("Giảm tải chạy thử còn 30%",8,1,0,-2,1,0,"Chỉ đánh giá một phần.")),
+  sc("Thiết bị SCADA không đồng bộ","PLC và phần mềm giám sát từ hai nhà cung cấp không tương thích.",
+   A("Vận hành thủ công lâu dài",5,1,-1,-6,-2,0,"Giảm chức năng tự động hóa."),
+   A("Tổ chức interface test và thống nhất giao thức",20,1,2,10,3,0,"Giải pháp tích hợp phù hợp."),
+   A("Thay toàn bộ hệ SCADA",8,-4,6,5,2,0,"Có thể quá mức cần thiết."))
+ ])
+},
+industrial:{
+ name:"Khu công nghiệp", duration:36, budget:5200,
+ desc:"Phát triển khu công nghiệp với san nền, giao thông nội bộ, cấp điện, cấp thoát nước, xử lý nước thải và hạ tầng logistics.",
+ tasks:[
+  ["A","Quy hoạch & thiết kế",4,[]],["B","GPMB",8,[]],["C","San nền",6,["A","B"]],["D","Đường nội bộ",6,["C"]],
+  ["E","Cấp điện",5,["C"]],["F","Cấp thoát nước",5,["C"]],["G","XLNT tập trung",7,["F"]],
+  ["H","Kho logistics",6,["D","E"]],["I","Đấu nối hạ tầng",3,["G","H"]],["J","Nghiệm thu",2,["I"]]
+ ],
+ scenarios:standardScenarios("khu công nghiệp",[
+  sc("Chậm GPMB","15% diện tích chưa bàn giao do vướng bồi thường.",
+   A("Chờ bàn giao toàn bộ",4,-5,0,0,0,0,"Làm chậm dự án."),
+   A("Phân khu thi công và ưu tiên hạ tầng trên diện tích sạch",20,5,1,1,0,0,"Phân kỳ hợp lý."),
+   A("Thi công vào khu vực chưa bàn giao",0,4,2,-3,-3,-2,"Rủi ro pháp lý và xã hội.")),
+  sc("Thiếu công suất trạm điện","Nhu cầu của nhà đầu tư thứ cấp cao hơn dự báo.",
+   A("Giữ thiết kế cũ",5,2,0,-8,-2,0,"Có thể thiếu công suất."),
+   A("Cập nhật demand forecast và phương án mở rộng theo giai đoạn",20,0,2,7,2,0,"Phù hợp với phát triển theo pha."),
+   A("Mua máy phát diesel làm nguồn chính",7,2,5,-2,-1,-7,"Chi phí và môi trường kém.")),
+  sc("Nước thải đầu vào biến động","Một nhà máy thứ cấp dự kiến xả tải hữu cơ cao.",
+   A("Không yêu cầu tiền xử lý",2,1,0,-8,0,-12,"Gây rủi ro cho trạm XLNT."),
+   A("Thiết lập giới hạn đầu vào và yêu cầu tiền xử lý cục bộ",20,0,1,5,1,10,"Quản trị nguồn thải phù hợp."),
+   A("Tăng kích thước trạm XLNT ngay",8,-2,5,4,1,5,"Có thể cần nhưng phải đánh giá nhu cầu.")),
+  sc("Nhà đầu tư yêu cầu bàn giao sớm một phân khu","Khách thuê chiến lược muốn nhận đất sớm 2 tháng.",
+   A("Bỏ nghiệm thu hạ tầng khu đó",0,6,-1,-10,-6,-3,"Không phù hợp."),
+   A("Ưu tiên phân khu, lập mini-critical path và nghiệm thu độc lập",20,6,2,2,0,0,"Phù hợp quản lý theo phân khu."),
+   A("Từ chối bàn giao sớm",8,0,0,1,1,0,"An toàn nhưng bỏ cơ hội kinh doanh.")),
+  sc("Ngập cục bộ sau mưa lớn","Một khu vực san nền xuất hiện ngập kéo dài.",
+   A("Bơm tạm và không điều chỉnh thiết kế",6,1,1,-4,0,-5,"Không xử lý nguyên nhân."),
+   A("Rà soát cao độ, thủy văn và năng lực thoát nước",20,-1,2,8,2,8,"Giải pháp bền vững."),
+   A("Nâng cốt toàn bộ khu công nghiệp",7,-4,8,4,1,3,"Có thể quá mức và tốn kém."))
+ ])
+},
+entertainment:{
+ name:"Khu vui chơi giải trí", duration:28, budget:2500,
+ desc:"Khu vui chơi tích hợp trò chơi cơ khí, công viên nước, cảnh quan, trung tâm dịch vụ và hệ thống an toàn vận hành.",
+ tasks:[
+  ["A","Thiết kế ý tưởng",3,[]],["B","Thiết kế kỹ thuật",4,["A"]],["C","San nền",4,["B"]],["D","Hạ tầng kỹ thuật",5,["C"]],
+  ["E","Trò chơi cơ khí",7,["D"]],["F","Công viên nước",6,["D"]],["G","Cảnh quan",5,["D"]],
+  ["H","Điện điều khiển",4,["E","F"]],["I","Kiểm định & chạy thử",3,["H","G"]],["J","Khai trương",1,["I"]]
+ ],
+ scenarios:standardScenarios("khu vui chơi giải trí",[
+  sc("Thiết bị trò chơi nhập khẩu chậm","Một trò chơi chủ lực giao chậm 5 tuần.",
+   A("Hoãn toàn bộ khai trương",5,-6,0,0,0,0,"Tác động lớn."),
+   A("Khai thác các hạng mục độc lập, ưu tiên lắp đặt khi thiết bị về",20,4,1,2,1,0,"Quản lý theo package."),
+   A("Dùng thiết bị thay thế chưa kiểm định",0,6,2,-10,-18,0,"Rủi ro an toàn rất cao.")),
+  sc("Kiểm định trò chơi chưa đạt","Một thiết bị chưa đạt thử tải.",
+   A("Mở vận hành với tải thấp",0,4,0,-10,-20,0,"Không chấp nhận."),
+   A("Dừng thiết bị, xử lý lỗi và kiểm định lại",20,-2,2,10,15,0,"Đúng nguyên tắc an toàn."),
+   A("Tăng nhân viên giám sát để vận hành",3,2,1,-5,-12,0,"Không thay thế kiểm định.")),
+  sc("Rò rỉ hệ thống công viên nước","Thử kín phát hiện rò rỉ đường ống ngầm.",
+   A("Bù nước khi vận hành",2,2,1,-8,-2,-6,"Không xử lý nguyên nhân."),
+   A("Xác định vị trí, sửa chữa và thử kín lại",20,-1,2,9,3,5,"Phù hợp QA/QC."),
+   A("Giảm áp lực vận hành",7,1,0,-4,0,-2,"Chỉ là giải pháp tạm.")),
+  sc("Thay đổi concept cảnh quan","Chủ đầu tư muốn bổ sung hạng mục check-in lớn.",
+   A("Thi công ngay",6,-1,4,-1,0,-1,"Thiếu kiểm soát thay đổi."),
+   A("Đánh giá tác động dòng người, kết cấu, chi phí và vận hành",20,0,1,4,2,1,"Đánh giá tích hợp."),
+   A("Từ chối vì thiết kế đã chốt",8,1,0,0,0,0,"Thiếu linh hoạt.")),
+  sc("Sự kiện khai trương cố định","Ngày khai trương gắn với kỳ nghỉ lễ, không thể lùi.",
+   A("Bỏ kiểm định một số trò chơi",0,7,-1,-12,-18,0,"Không phù hợp."),
+   A("Ưu tiên các khu đủ điều kiện, mở từng phần và giữ khu chưa đạt đóng cửa",20,6,2,3,6,0,"Tách phạm vi khai thác giúp giữ an toàn."),
+   A("Tăng ca liên tục mọi hạng mục",8,6,4,-4,-6,-1,"Rủi ro mệt mỏi."))
+ ])
+},
+highway:{
+ name:"Đường cao tốc", duration:36, budget:18000,
+ desc:"Tuyến cao tốc gồm nền đường, cầu, hầm, nút giao, ITS và công trình an toàn giao thông.",
+ tasks:[
+  ["A","Thiết kế & khảo sát",4,[]],["B","GPMB",8,[]],["C","Nền đường",9,["A","B"]],["D","Cầu",10,["A","B"]],
+  ["E","Hầm",12,["A","B"]],["F","Mặt đường",6,["C"]],["G","ITS",4,["F","D","E"]],
+  ["H","ATGT",3,["F"]],["I","Thử tải & nghiệm thu",2,["G","H"]],["J","Thông xe",1,["I"]]
+ ],
+ scenarios:standardScenarios("đường cao tốc",[
+  sc("Thiếu vật liệu đắp","Nguồn vật liệu được phê duyệt chỉ đáp ứng 70% nhu cầu.",
+   A("Chờ bổ sung mỏ mới",5,-5,0,0,0,0,"An toàn thủ tục nhưng chậm."),
+   A("Khảo sát nguồn thay thế và hoàn thiện thủ tục song song",20,5,1,1,0,-1,"Chủ động và có kiểm soát."),
+   A("Dùng nguồn chưa được phê duyệt",1,6,-1,-9,-2,-10,"Rủi ro chất lượng, pháp lý, môi trường.")),
+  sc("Phát hiện đất yếu","Một đoạn 3 km có nền đất yếu hơn dự báo.",
+   A("Thi công theo thiết kế cũ",0,4,0,-18,-12,0,"Rủi ro lớn."),
+   A("Khảo sát bổ sung và điều chỉnh xử lý nền",20,-1,3,12,8,0,"Đúng nguyên tắc địa kỹ thuật."),
+   A("Tăng chiều dày cấp phối",5,1,2,-7,-4,0,"Không giải quyết nguyên nhân.")),
+  sc("Mưa lớn kéo dài","Thi công nền và mặt đường bị gián đoạn.",
+   A("Thi công bất chấp độ ẩm",2,5,1,-12,-5,0,"Rủi ro chất lượng."),
+   A("Chuyển nguồn lực sang cầu, cống, cấu kiện đúc sẵn",20,4,1,2,1,0,"Tối ưu sequencing."),
+   A("Dừng toàn bộ tuyến",4,-6,0,1,2,0,"Không cần thiết.")),
+  sc("Người dân phản ánh bụi","Vận chuyển vật liệu gây bụi và ảnh hưởng khu dân cư.",
+   A("Tiếp tục để bù tiến độ",2,3,0,0,-2,-12,"Rủi ro cộng đồng và môi trường."),
+   A("Che phủ xe, tưới đường, giới hạn tốc độ và giờ vận chuyển",20,0,1,0,4,10,"Biện pháp phù hợp."),
+   A("Dừng vận chuyển ban ngày hoàn toàn",8,-3,1,0,3,8,"Giảm tác động nhưng ảnh hưởng tiến độ.")),
+  sc("Cầu trên đường găng chậm","Một cầu lớn chậm 45 ngày.",
+   A("Tăng ca toàn tuyến",8,4,4,-3,-5,0,"Không tập trung."),
+   A("Crashing công việc cầu và prefabrication có chọn lọc",20,7,3,1,-1,0,"Tập trung đường găng."),
+   A("Chờ nhà thầu khắc phục",3,-5,0,0,0,0,"Thụ động."))
+ ])
+},
+rail:{
+ name:"Đường sắt tốc độ cao", duration:60, budget:65000,
+ desc:"Đoạn tuyến đường sắt tốc độ cao gồm cầu cạn, hầm, ga, đường ray, điện kéo, tín hiệu và điều khiển.",
+ tasks:[
+  ["A","Khảo sát & thiết kế",6,[]],["B","GPMB",12,[]],["C","Cầu cạn",14,["A","B"]],["D","Hầm",16,["A","B"]],
+  ["E","Nhà ga",12,["A","B"]],["F","Đường ray",8,["C","D"]],["G","Điện kéo",7,["F"]],["H","Tín hiệu",8,["F","E"]],
+  ["I","Tích hợp hệ thống",5,["G","H"]],["J","Chạy thử",4,["I"]]
+ ],
+ scenarios:standardScenarios("đường sắt tốc độ cao",[
+  sc("Địa chất hầm phức tạp","Máy đào hầm gặp vùng địa chất yếu.",
+   A("Tăng tốc TBM",1,5,2,-10,-15,0,"Nguy cơ an toàn."),
+   A("Khảo sát bổ sung, gia cố và điều chỉnh phương pháp đào",20,-1,3,10,10,0,"Phù hợp."),
+   A("Dừng toàn bộ dự án",5,-7,2,2,4,0,"Quá mức cần thiết.")),
+  sc("Xung đột giao diện","Mốc kỹ thuật giữa cầu cạn và đường ray chưa đồng nhất.",
+   A("Để từng nhà thầu tự xử lý",4,-3,1,-7,0,0,"Thiếu interface management."),
+   A("Tổ chức interface coordination và BIM clash review",20,4,1,8,2,0,"Phù hợp dự án hệ thống phức tạp."),
+   A("Yêu cầu gói ray tự điều chỉnh",8,1,2,-2,0,0,"Giải pháp cục bộ.")),
+  sc("Tín hiệu giao chậm","Thiết bị tín hiệu chậm 8 tuần.",
+   A("Chờ thiết bị",4,-5,0,0,0,0,"Thụ động."),
+   A("Hoàn thiện hạ tầng, cáp, phòng thiết bị và FAT song song",20,5,1,4,2,0,"Tối ưu tích hợp."),
+   A("Thay hệ khác không đồng bộ",2,5,5,-12,-10,0,"Rủi ro tích hợp.")),
+  sc("Chi phí thép tăng","Giá thép tăng 12%.",
+   A("Giảm tiêu chuẩn vật liệu",0,1,-3,-20,-10,0,"Không phù hợp."),
+   A("Tối ưu thiết kế và kế hoạch mua sắm",20,1,-2,2,0,0,"Value engineering."),
+   A("Dừng mua để chờ giá giảm",4,-5,-1,0,0,0,"Tạo rủi ro tiến độ.")),
+  sc("Áp lực chạy thử sớm","Một số kiểm tra tích hợp chưa hoàn tất.",
+   A("Chạy thử sớm để kịp mốc",0,6,0,-10,-20,0,"Không phù hợp."),
+   A("Hoàn thành SIT trước chạy thử",20,-1,1,10,15,0,"Đúng commissioning."),
+   A("Chạy thử 50% tốc độ",7,2,0,-3,-8,0,"Vẫn không thay thế SIT."))
+ ])
+},
+airport:{
+ name:"Sân bay", duration:48, budget:45000,
+ desc:"Dự án sân bay gồm đường cất hạ cánh, đường lăn, sân đỗ, nhà ga, hành lý, an ninh và hạ tầng kỹ thuật.",
+ tasks:[
+  ["A","Thiết kế",5,[]],["B","GPMB",10,[]],["C","Đường băng",12,["A","B"]],["D","Nhà ga",14,["A","B"]],
+  ["E","Sân đỗ",8,["C"]],["F","Hành lý",7,["D"]],["G","An ninh",6,["D"]],["H","Điện & ICT",7,["D"]],
+  ["I","ORAT & chạy thử",5,["E","F","G","H"]],["J","Khai thác",1,["I"]]
+ ],
+ scenarios:standardScenarios("sân bay",[
+  sc("Mưa ảnh hưởng đường băng","Độ ẩm nền cao, không phù hợp thi công lớp mặt.",
+   A("Thi công bất kể độ ẩm",1,5,1,-15,-6,0,"Rủi ro chất lượng."),
+   A("Chuyển nguồn lực sang nhà ga và công việc trong nhà",20,4,1,2,1,0,"Sequencing hợp lý."),
+   A("Dừng toàn dự án",3,-6,0,1,1,0,"Không cần thiết.")),
+  sc("Thiết bị soi chiếu chậm","Thiết bị an ninh hàng không giao chậm 45 ngày.",
+   A("Chờ thiết bị mới làm khu vực an ninh",4,-5,0,0,0,0,"Thụ động."),
+   A("Hoàn thiện hạ tầng và FAT trước khi giao",20,4,1,3,2,0,"Giảm thời gian tích hợp."),
+   A("Dùng thiết bị dân dụng tạm",0,5,-1,-10,-20,0,"Không đáp ứng an ninh.")),
+  sc("Hệ thống hành lý lỗi","BHS xuất hiện lỗi khi thử tích hợp.",
+   A("Bỏ qua lỗi nhỏ",1,4,0,-15,-8,0,"Không phù hợp."),
+   A("Root-cause và chạy thử tích hợp lại",20,-1,2,12,7,0,"Đúng commissioning."),
+   A("Thay toàn bộ BHS",8,-5,7,5,2,0,"Có thể quá mức.")),
+  sc("Tiếng ồn thi công ban đêm","Cộng đồng phản ánh thi công ban đêm.",
+   A("Tiếp tục 24/24",3,4,2,0,-2,-12,"Rủi ro xã hội."),
+   A("Điều chỉnh giờ, che chắn và quan trắc",20,0,1,0,2,10,"Cân bằng."),
+   A("Cấm toàn bộ thi công ban đêm",9,-2,1,0,2,8,"Hiệu quả môi trường nhưng ảnh hưởng tiến độ.")),
+  sc("ORAT phát hiện điểm nghẽn","Mô phỏng dòng hành khách cho thấy khu soi chiếu quá tải.",
+   A("Bỏ qua vì chỉ là mô phỏng",2,3,0,-8,-8,0,"ORAT nhằm phát hiện lỗi trước khai thác."),
+   A("Điều chỉnh layout/quy trình và thử lại",20,-1,2,8,8,0,"Phản hồi đúng."),
+   A("Tăng nhân sự vận hành là đủ",8,1,1,0,2,0,"Có thể giúp nhưng chưa xử lý layout."))
+ ])
+},
+port:{
+ name:"Cảng", duration:40, budget:22000,
+ desc:"Cảng biển gồm cầu cảng, nạo vét, kho bãi, logistics, cần cẩu bờ và hạ tầng điện–nước.",
+ tasks:[
+  ["A","Khảo sát biển",4,[]],["B","Thiết kế",4,["A"]],["C","Nạo vét",8,["B"]],["D","Cầu cảng",12,["B"]],
+  ["E","Bãi container",8,["B"]],["F","Kho",6,["E"]],["G","Cẩu bờ",6,["D"]],["H","Điện & điều khiển",5,["G","F"]],
+  ["I","Chạy thử",3,["C","H"]],["J","Nghiệm thu",1,["I"]]
+ ],
+ scenarios:standardScenarios("cảng",[
+  sc("Địa chất đáy biển phức tạp","Lớp bùn yếu dày hơn dự kiến.",
+   A("Đóng cọc theo thiết kế cũ",1,4,0,-15,-12,-1,"Rủi ro nền móng."),
+   A("Khảo sát bổ sung và điều chỉnh móng",20,-1,3,12,8,0,"Phù hợp."),
+   A("Tăng số lượng cọc không tính lại",5,1,4,-3,-2,0,"Thiếu cơ sở.")),
+  sc("Bão sắp đổ bộ","Dự báo bão mạnh trong 72 giờ.",
+   A("Thi công để bù tiến độ",0,3,0,-3,-20,-3,"Rủi ro rất cao."),
+   A("Kích hoạt kế hoạch bão, neo giữ và sơ tán phương tiện",20,-1,1,2,15,3,"Quản trị rủi ro phù hợp."),
+   A("Dừng một tháng",5,-6,2,1,8,0,"Quá mức cần thiết.")),
+  sc("Nạo vét tăng độ đục","Độ đục tăng tại vùng nhạy cảm.",
+   A("Bỏ qua vì tạm thời",1,3,0,0,0,-18,"Không phù hợp."),
+   A("Điều chỉnh nạo vét và tăng quan trắc",20,-1,2,1,1,15,"Phù hợp môi trường."),
+   A("Dừng vĩnh viễn nạo vét",4,-8,3,0,0,8,"Không khả thi.")),
+  sc("Cẩu bờ giao chậm","Cẩu container chậm 2 tháng.",
+   A("Không đổi kế hoạch",4,-5,0,0,0,0,"Thụ động."),
+   A("Hoàn thiện ray cẩu, điện và đào tạo vận hành trước",20,4,1,3,2,0,"Tận dụng thời gian."),
+   A("Mua cẩu cũ chưa kiểm định",1,5,3,-10,-18,0,"Rủi ro lớn.")),
+  sc("Xung đột luồng tàu thi công","Tàu thi công và luồng khai thác hiện hữu xung đột.",
+   A("Ưu tiên thi công, tạm bỏ quy trình điều độ",0,4,0,0,-18,-3,"Rủi ro hàng hải."),
+   A("Lập marine traffic management plan",20,0,1,1,12,1,"Phù hợp."),
+   A("Chỉ thi công ban đêm",8,1,2,0,1,-1,"Có thể hỗ trợ nhưng chưa đủ."))
+ ])
+},
+building:{
+ name:"Nhà cao tầng", duration:30, budget:4200,
+ desc:"Tòa nhà hỗn hợp 45 tầng gồm kết cấu, MEP, facade, hoàn thiện, PCCC và commissioning.",
+ tasks:[
+  ["A","Thiết kế",3,[]],["B","Móng",5,["A"]],["C","Tầng hầm",5,["B"]],["D","Kết cấu thân",12,["C"]],
+  ["E","Facade",7,["D"]],["F","MEP",9,["D"]],["G","Hoàn thiện",7,["D"]],["H","PCCC",5,["F"]],
+  ["I","Commissioning",3,["E","G","H"]],["J","Bàn giao",1,["I"]]
+ ],
+ scenarios:standardScenarios("nhà cao tầng",[
+  sc("Chu kỳ tầng chậm","Thi công bê tông chậm 3 ngày mỗi chu kỳ.",
+   A("Tháo cốp pha sớm hơn tiêu chuẩn",0,6,0,-18,-15,0,"Không phù hợp."),
+   A("Tối ưu cycle, bổ sung bộ cốp pha và logistics tầng",20,6,2,3,2,0,"Cải thiện năng suất có kiểm soát."),
+   A("Tăng ca liên tục",7,5,3,-5,-8,0,"Rủi ro mệt mỏi.")),
+  sc("Xung đột MEP–kết cấu","Ống điều hòa giao cắt dầm.",
+   A("Đục dầm",0,3,1,-18,-12,0,"Không được tự ý thay đổi kết cấu."),
+   A("BIM clash review và điều chỉnh tuyến MEP",20,2,1,10,5,0,"Giải pháp phù hợp."),
+   A("Thu nhỏ ống",5,2,0,-8,0,0,"Có thể ảnh hưởng hiệu suất.")),
+  sc("Vật rơi từ trên cao","Near-miss xảy ra tại mặt ngoài tòa nhà.",
+   A("Không báo cáo",0,1,0,0,-20,0,"Rủi ro nghiêm trọng."),
+   A("Dừng khu vực, điều tra và bổ sung toe-board/lưới",20,-1,1,1,15,0,"Phù hợp."),
+   A("Nhắc nhở công nhân",6,1,0,0,-6,0,"Chưa đủ.")),
+  sc("Khách hàng đổi vật liệu hoàn thiện","Yêu cầu thay đá và thiết bị vệ sinh ở 12 tầng.",
+   A("Đổi ngay",6,-2,4,-1,0,0,"Thiếu change control."),
+   A("Đánh giá lead time, mock-up, chi phí và phê duyệt",20,0,1,4,0,0,"Đúng quy trình."),
+   A("Từ chối mọi thay đổi",8,1,0,0,0,0,"Thiếu linh hoạt.")),
+  sc("PCCC thử nghiệm chưa đạt","Một khu vực không đạt thử áp/smoke test.",
+   A("Nghiệm thu có điều kiện",1,3,0,-10,-18,0,"Không phù hợp."),
+   A("Sửa lỗi và thử lại trước commissioning",20,-1,2,10,14,0,"Đúng nguyên tắc life safety."),
+   A("Tăng nhân viên trực PCCC sau bàn giao",3,2,1,-5,-10,0,"Không thay thế hệ thống đạt chuẩn."))
+ ])
+},
+stadium:{
+ name:"Sân vận động", duration:32, budget:6800,
+ desc:"Sân vận động 45.000 chỗ gồm khán đài, mái thép, mặt sân, MEP, thoát hiểm và hạ tầng sự kiện.",
+ tasks:[
+  ["A","Thiết kế",3,[]],["B","Móng",5,["A"]],["C","Khán đài",9,["B"]],["D","Mái thép",8,["C"]],
+  ["E","MEP",6,["C"]],["F","Mặt sân",4,["C"]],["G","Ghế & hoàn thiện",5,["C"]],["H","Thoát hiểm",4,["E","G"]],
+  ["I","Chạy thử sự kiện",2,["D","F","H"]],["J","Khai trương",1,["I"]]
+ ],
+ scenarios:standardScenarios("sân vận động",[
+  sc("Mái thép chậm sản xuất","Nhà thầu mái thép chậm 5 tuần.",
+   A("Chờ nhà thầu",4,-5,0,0,0,0,"Không có recovery."),
+   A("Tăng prefabrication off-site và điều chỉnh trình tự lắp",20,5,2,3,1,0,"Phù hợp."),
+   A("Giảm kiểm tra mối hàn",0,6,-1,-18,-18,0,"Không chấp nhận.")),
+  sc("Mặt sân thoát nước kém","Thử nghiệm cho thấy vài khu vực đọng nước.",
+   A("Nghiệm thu",2,3,0,-15,-2,0,"Ảnh hưởng chất lượng."),
+   A("Kiểm tra độ dốc và xử lý khu vực không đạt",20,-1,2,12,2,0,"Đúng QA/QC."),
+   A("Bổ sung máy bơm khi có trận đấu",6,2,2,-5,0,0,"Chỉ xử lý hậu quả.")),
+  sc("Sự kiện bị đẩy sớm","Ngày khai mạc sớm hơn 20 ngày.",
+   A("Bỏ kiểm tra hệ thống phụ",0,6,0,-15,-15,0,"Không phù hợp."),
+   A("Recovery schedule dựa trên critical path",20,7,3,2,0,0,"Phù hợp."),
+   A("Tăng ca 24/24",8,6,5,-6,-10,-1,"Rủi ro cao.")),
+  sc("Thoát người vượt thời gian mục tiêu","Diễn tập cho thấy một khu khán đài thoát người chậm.",
+   A("Bỏ qua vì chỉ là mô phỏng",0,3,0,-10,-25,0,"Life safety trọng yếu."),
+   A("Đánh giá luồng người và điều chỉnh lối thoát/biển chỉ dẫn",20,-1,2,8,18,0,"Cần xử lý trước khai thác."),
+   A("Tăng bảo vệ",8,1,1,0,4,0,"Không thay thế thiết kế.")),
+  sc("Ngân sách bị cắt 7%","Nguồn vốn còn lại thấp hơn kế hoạch.",
+   A("Giảm tiêu chuẩn kết cấu",0,1,-5,-20,-20,0,"Không phù hợp."),
+   A("Ưu tiên chức năng thiết yếu và value engineering",20,2,-3,2,1,0,"Phù hợp."),
+   A("Dừng dự án xin thêm vốn",4,-6,0,0,0,0,"Ảnh hưởng lớn tiến độ."))
+ ])
+}
+};
+
+let state={}, selectedChoice=null, currentRisk=null, cpmCache=[];
+
+function initProjects(){
+  const sel=document.getElementById("projectType");
+  Object.keys(projectData).forEach((k,i)=>{
+    const o=document.createElement("option"); o.value=k; o.textContent=projectData[k].name; sel.appendChild(o);
+  });
+}
+function startProject(){
+  const p=projectData[document.getElementById("projectType").value];
+  state={round:0,progress:8,quality:85,safety:90,env:85,score:0,ac:p.budget*0.08,history:[]};
+  selectedChoice=null; currentRisk=null;
+  document.getElementById("historyBody").innerHTML="";
+  document.getElementById("projectInfo").innerHTML=`<b>${p.name}</b><br>${p.desc}<br><span class="small">Thời gian kế hoạch: ${p.duration} tháng • BAC: ${p.budget.toLocaleString("vi-VN")} tỷ đồng</span>`;
+  cpmCache=calculateCPM(p.tasks); renderCPM(); renderGantt(); loadRound(); updateDashboard();
+  document.getElementById("feedback").innerHTML="Phân tích tình huống, điều chỉnh nguồn lực và lựa chọn phương án.";
+  document.getElementById("scoreComment").innerHTML="";
+}
+function calculateCPM(tasks){
+  const m={}; tasks.forEach(t=>m[t[0]]={id:t[0],name:t[1],dur:t[2],deps:t[3],ES:0,EF:0,LS:0,LF:0,slack:0});
+  let remaining=new Set(Object.keys(m)), guard=0;
+  while(remaining.size && guard++<100){
+    for(const id of [...remaining]){
+      const x=m[id];
+      if(x.deps.every(d=>!remaining.has(d))){
+        x.ES=x.deps.length?Math.max(...x.deps.map(d=>m[d].EF)):0; x.EF=x.ES+x.dur; remaining.delete(id);
+      }
+    }
+  }
+  const projectDur=Math.max(...Object.values(m).map(x=>x.EF));
+  const ids=Object.keys(m).sort((a,b)=>m[b].EF-m[a].EF);
+  ids.forEach(id=>{
+    const x=m[id], succ=Object.values(m).filter(y=>y.deps.includes(id));
+    x.LF=succ.length?Math.min(...succ.map(y=>y.LS)):projectDur; x.LS=x.LF-x.dur; x.slack=x.LS-x.ES;
+  });
+  return Object.values(m).sort((a,b)=>a.ES-b.ES);
+}
+function renderCPM(){
+  document.getElementById("cpmBody").innerHTML=cpmCache.map(x=>`<tr class="${x.slack===0?"task-critical":"task-normal"}">
+  <td>${x.id}. ${x.name}</td><td>${x.dur}</td><td>${x.deps.join(", ")||"-"}</td><td>${x.ES}</td><td>${x.EF}</td><td>${x.LS}</td><td>${x.LF}</td><td>${x.slack}</td><td>${x.slack===0?"🔴 Critical":"🟢 Non-critical"}</td></tr>`).join("");
+}
+function renderGantt(){
+  const max=Math.max(...cpmCache.map(x=>x.EF));
+  document.getElementById("gantt").innerHTML=cpmCache.map(x=>{
+    const left=x.ES/max*100, width=x.dur/max*100;
+    return `<div class="ganttRow"><div class="ganttName">${x.id}. ${x.name}</div><div class="ganttTrack">
+      <div class="ganttBar ${x.slack===0?"critical":""}" style="left:${left}%;width:${width}%" title="${x.ES}–${x.EF}"></div>
+    </div></div>`;
+  }).join("");
+}
+function pickRisk(){
+  const r=Math.random(); let sum=0;
+  for(const x of commonRisks){ sum+=x.p; if(r<=sum) return x; }
+  return commonRisks[commonRisks.length-1];
+}
+function loadRound(){
+  const p=projectData[document.getElementById("projectType").value];
+  if(state.round>=10){finishProject();return}
+  const s=p.scenarios[state.round%p.scenarios.length];
+  document.getElementById("scenarioBox").innerHTML=`<b>${s.title}</b><br><br>${s.text}`;
+  currentRisk=pickRisk();
+  document.getElementById("riskBox").innerHTML=`<div class="risk"><b>🎲 Rủi ro vòng này:</b> ${currentRisk.name}</div>`;
+  const choices=document.getElementById("choices"); choices.innerHTML="";
+  s.choices.forEach((c,i)=>{
+    const b=document.createElement("button"); b.className="choice";
+    b.innerHTML=`<b>${String.fromCharCode(65+i)}.</b> ${c.text}`;
+    b.onclick=()=>{selectedChoice=i;document.querySelectorAll(".choice").forEach(x=>x.classList.remove("selected"));b.classList.add("selected")};
+    choices.appendChild(b);
+  });
+  document.getElementById("round").textContent=state.round+1;
+}
+function updateLabels(){
+  [["labor","laborV"],["overtime","overtimeV"],["reserve","reserveV"],["qa","qaV"],["stake","stakeV"]].forEach(([a,b])=>document.getElementById(b).textContent=document.getElementById(a).value+"%");
+}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function evm(completedRounds=state.round){
+  const p=projectData[document.getElementById("projectType").value], planned=Math.min(100,8+completedRounds*9.2);
+  const PV=p.budget*planned/100, EV=p.budget*state.progress/100, AC=state.ac;
+  return {PV,EV,AC,SPI:PV?EV/PV:1,CPI:AC?EV/AC:1,SV:EV-PV,CV:EV-AC};
+}
+function updateDashboard(){
+  const k=evm();
+  document.getElementById("progressMetric").textContent=Math.round(state.progress)+"%";
+  document.getElementById("costMetric").textContent=state.ac.toFixed(0);
+  document.getElementById("qualityMetric").textContent=Math.round(state.quality);
+  document.getElementById("safetyMetric").textContent=Math.round(state.safety);
+  document.getElementById("envMetric").textContent=Math.round(state.env);
+  document.getElementById("progressBar").style.width=state.progress+"%";
+  document.getElementById("spi").textContent=k.SPI.toFixed(2);
+  document.getElementById("cpi").textContent=k.CPI.toFixed(2);
+  document.getElementById("sv").textContent=k.SV.toFixed(0);
+  document.getElementById("cv").textContent=k.CV.toFixed(0);
+  document.getElementById("score").textContent=Math.round(state.score);
+}
+function submitDecision(){
+  if(selectedChoice===null){alert("Hãy chọn một phương án.");return}
+  const p=projectData[document.getElementById("projectType").value], s=p.scenarios[state.round%p.scenarios.length], ch=s.choices[selectedChoice];
+  const labor=+document.getElementById("labor").value, overtime=+document.getElementById("overtime").value,
+        reserve=+document.getElementById("reserve").value, qa=+document.getElementById("qa").value,
+        stake=+document.getElementById("stake").value, strategy=document.getElementById("strategy").value;
+  let pd=8+ch.p + labor*.05 + overtime*.04;
+  let cd=(p.budget/10)*(1 + labor*.003 + overtime*.004 + reserve*.002) + ch.c*(p.budget/100);
+  let qd=ch.q + (qa-70)*.05, sd=ch.s - Math.max(0,overtime-30)*.08, ed=ch.e + (stake-60)*.025;
+  if(strategy==="schedule"){pd+=2;cd+=p.budget*.006;qd-=.5;sd-=.7}
+  if(strategy==="cost"){cd-=p.budget*.007;pd-=1}
+  if(strategy==="quality"){qd+=3;pd-=.5;cd+=p.budget*.004}
+  if(strategy==="safety"){sd+=4;pd-=.5;cd+=p.budget*.003}
+  if(strategy==="environment"){ed+=4;pd-=.5;cd+=p.budget*.003}
+  if(strategy==="balanced"){qd+=.5;sd+=.5;ed+=.5}
+
+  pd+=currentRisk.progress; cd+=currentRisk.cost*(p.budget/100); qd+=currentRisk.quality; sd+=currentRisk.safety; ed+=currentRisk.env;
+  if(reserve>=10){pd+=1;sd+=1;ed+=1}
+  if(overtime>40){qd-=2;sd-=4}
+  if(labor>40){cd+=p.budget*.005}
+  if(qa<55){qd-=3}
+  if(stake<40){ed-=2}
+
+  state.progress=clamp(state.progress+pd,0,100);
+  state.ac=Math.max(0,state.ac+cd);
+  state.quality=clamp(state.quality+qd,0,100);
+  state.safety=clamp(state.safety+sd,0,100);
+  state.env=clamp(state.env+ed,0,100);
+
+  let roundScore=ch.score;
+  if(labor>=5&&labor<=30) roundScore+=1;
+  if(overtime<=30) roundScore+=1; else if(overtime>40) roundScore-=2;
+  if(qa>=65) roundScore+=1;
+  if(stake>=50) roundScore+=1;
+  if(reserve>=5&&reserve<=15) roundScore+=1;
+  roundScore=clamp(roundScore,0,10);
+  state.score+=roundScore;
+
+  const k=evm(state.round+1);
+  const fb=[];
+  fb.push(`<p><b>Nhận xét quyết định:</b> ${ch.fb}</p>`);
+  if(k.SPI<.9) fb.push(`<p class="warn">⚠ SPI=${k.SPI.toFixed(2)}: dự án đang chậm so với kế hoạch.</p>`);
+  if(k.CPI<.9) fb.push(`<p class="warn">⚠ CPI=${k.CPI.toFixed(2)}: hiệu quả chi phí thấp.</p>`);
+  if(overtime>40) fb.push(`<p class="bad">⛔ Tăng ca quá cao làm tăng rủi ro mệt mỏi và tai nạn.</p>`);
+  if(state.safety<70) fb.push(`<p class="bad">⛔ Chỉ số an toàn đã xuống mức nguy hiểm.</p>`);
+  if(state.quality<70) fb.push(`<p class="bad">⛔ Chất lượng thấp, nguy cơ rework.</p>`);
+  if(state.env<70) fb.push(`<p class="bad">⛔ Hiệu quả quản lý môi trường thấp.</p>`);
+  fb.push(`<p class="${roundScore>=8?"good":roundScore>=6?"warn":"bad"}">Điểm vòng: ${roundScore}/10.</p>`);
+  document.getElementById("feedback").innerHTML=fb.join("");
+
+  state.history.push({round:state.round+1,scenario:s.title,decision:ch.text,risk:currentRisk.name,spi:k.SPI,cpi:k.CPI,score:roundScore});
+  document.getElementById("historyBody").innerHTML=state.history.map(h=>`<tr><td>${h.round}</td><td>${h.scenario}</td><td>${h.decision}</td><td>${h.risk}</td><td>${h.spi.toFixed(2)}</td><td>${h.cpi.toFixed(2)}</td><td>${h.score}/10</td></tr>`).join("");
+  state.round++; selectedChoice=null; updateDashboard();
+  setTimeout(loadRound,450);
+}
+function finishProject(){
+  const k=evm(); let bonus=0;
+  if(state.progress>=95)bonus+=3;if(state.quality>=80)bonus+=2;if(state.safety>=80)bonus+=2;if(state.env>=80)bonus+=1;if(k.CPI>=.95)bonus+=2;
+  state.score=clamp(state.score+bonus,0,100); updateDashboard();
+  let c=state.score>=90?"Xuất sắc":state.score>=80?"Tốt":state.score>=65?"Khá":state.score>=50?"Trung bình":"Cần cải thiện";
+  document.getElementById("scoreComment").innerHTML=`<b>${c}</b> – SPI ${k.SPI.toFixed(2)}, CPI ${k.CPI.toFixed(2)}, chất lượng ${Math.round(state.quality)}, an toàn ${Math.round(state.safety)}, môi trường ${Math.round(state.env)}.`;
+  document.getElementById("scenarioBox").innerHTML="<b>🏁 Kết thúc 10 vòng mô phỏng.</b><br>Hãy sử dụng nhật ký và các chỉ số EVM để thảo luận vì sao dự án đạt hoặc không đạt mục tiêu.";
+  document.getElementById("riskBox").innerHTML=""; document.getElementById("choices").innerHTML="";
+  saveLeaderboard();
+}
+function saveLeaderboard(){
+  const name=(document.getElementById("studentName").value||"Ẩn danh").trim(), project=document.getElementById("projectType").value;
+  const arr=JSON.parse(localStorage.getItem("pm_sim_lb")||"[]");
+  arr.push({name,project:projectData[project].name,score:Math.round(state.score),time:new Date().toLocaleString("vi-VN")});
+  arr.sort((a,b)=>b.score-a.score); localStorage.setItem("pm_sim_lb",JSON.stringify(arr.slice(0,30)));
+}
+function showLeaderboard(){
+  const card=document.getElementById("leaderboardCard"); card.style.display="block";
+  const arr=JSON.parse(localStorage.getItem("pm_sim_lb")||"[]");
+  document.getElementById("leaderboard").innerHTML=arr.length?`<table><thead><tr><th>#</th><th>Nhóm</th><th>Dự án</th><th>Điểm</th><th>Thời gian</th></tr></thead><tbody>${arr.map((x,i)=>`<tr><td>${i+1}</td><td>${x.name}</td><td>${x.project}</td><td>${x.score}</td><td>${x.time}</td></tr>`).join("")}</tbody></table>`:"Chưa có kết quả.";
+}
+function exportCSV(){
+  const rows=[["Round","Scenario","Decision","Risk","SPI","CPI","Score"],...state.history.map(h=>[h.round,h.scenario,h.decision,h.risk,h.spi.toFixed(2),h.cpi.toFixed(2),h.score])];
+  const csv="\ufeff"+rows.map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(",")).join("\n");
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"}),url=URL.createObjectURL(blob),a=document.createElement("a");
+  a.href=url;a.download="project_management_simulation.csv";a.click();URL.revokeObjectURL(url);
+}
+
+function openGuide(){
+  const modal=document.getElementById("guideModal");
+  modal.style.display="block";
+  modal.setAttribute("aria-hidden","false");
+  document.body.style.overflow="hidden";
+}
+
+function closeGuide(){
+  const modal=document.getElementById("guideModal");
+  modal.style.display="none";
+  modal.setAttribute("aria-hidden","true");
+  document.body.style.overflow="";
+}
+
+window.addEventListener("click",function(event){
+  const modal=document.getElementById("guideModal");
+  if(event.target===modal) closeGuide();
+});
+
+window.addEventListener("keydown",function(event){
+  if(event.key==="Escape") closeGuide();
+});
+
+initProjects(); updateLabels(); startProject();
+</script>
+</body>
+</html>
